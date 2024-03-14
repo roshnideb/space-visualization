@@ -6,3 +6,16 @@ body, html {
 canvas {
     display: block;
 }
+
+svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    font-family: 'LEMONMILK';
+}
+
+@font-face {
+    font-family: 'LEMONMILK';
+    src: url('fonts/LEMONMILK-Light.otf');
+}

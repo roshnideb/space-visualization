@@ -26,11 +26,24 @@ let rotatesX = false;
 let rotatesY = false;
 let rotatesZ = false;
 
+let currentYear = 2015;
+let disappearingYear = 2015;
+
+
+let ellipses = [
+    { color: '#ff6961', radius: 2, group: 'launch' },
+    { color: '#ffb480', radius: 2, group: 'satellite'},
+    { color: '#f8f38d', radius: 2, group: 'habitat'},
+    { color: '#42d6a4', radius: 2, group: 'data and analytics' },
+    { color: '#08cad1', radius: 2, group: 'propulsion' },
+    { color: '#59adf6', radius: 2, group: 'planetary' },
+    { color: '#9d94ff', radius: 2, group: 'exploration' },
+    { color: '#c780e8', radius: 2, group: '' }
+  ];
+
 //preload- need this for images and other stuff
-//only using 1000 values for now. switch dataset later
 function preload() {
     d3.csv('data/spaceheatmap_locations.csv').then(function(data) {
-        
         //data wrangling
         articles = data.map(function(d) {
             return {
@@ -57,9 +70,9 @@ function preload() {
 
     })
 
-    font = loadFont('/fonts/Arial.ttf');
+    font = loadFont('/fonts/LEMONMILK-Light.otf');
 
-    earthimg = loadImage('/imgs/earthlightsbw.png');
+    earthimg = loadImage('/imgs/earthlights1k.jpg');
 
     
 }
@@ -72,21 +85,85 @@ function setup() {
     earth = createGlobe(globeSize);
     textFont(font);
     
+    
+}
+
+//svg stuff (menus, legends)
+document.addEventListener('DOMContentLoaded',function() {
+    svg = d3.select("#legendsvg")
+        //.append("g")
+        .attr("width",window.innerWidth)
+        .attr("height",window.innerHeight);
+        
+
+    drawLegend();
+
+})
+
+function drawLegend() {
+    circX = window.innerWidth/27
+    circY = window.innerHeight - 250
+    circR = 5
+    svg.selectAll('legendcircle')
+        .data(ellipses)
+        .enter()
+        .append('circle')
+            .attr('cx', circX)
+            .attr('cy', function(d,i) { console.log(i);return circY + i*30})
+            .attr('r', 5)
+            .style('fill', function(d) { return d.color})
+            .on('click', function(d,i) {
+                
+                if (circR==5) {
+                    d3.select(this).attr('r',8);
+                    circR=8;
+                    i.radius = 3
+                    console.log(ellipses)
+                }
+                else {
+                    d3.select(this).attr('r',5);
+                    circR=5;
+                    i.radius = 2
+                }
+                
+            })
+        
+
+    svg.selectAll('legendtext')
+        .data(ellipses)
+        .enter()
+        .append('text')
+            .attr('x', circX + 20)
+            .attr('y', function(d,i) { return circY + i*30 + 6})
+            .text(function(d) { return d.group})
+            .style('fill','white')
+            .style('opacity',0.8)
 }
 
 //draw.. uhhh this keeps looping. i think
 function draw() {
     background(0,0,10);
     
+    push();
+    camera(0, 0, windowHeight, 0, 0, 0, 0, 1, 0)
+    drawYears();
+    pop();
+    
+
+    orbitControl(2,2,0);
     earth.draw();
     drawStars(articles);
     drawArticles();
+    
     drawTooltip();
+    
 
     //for starting animation
     if (incrementTime) {
         time++;
     }
+
+    
     
 }
 
@@ -96,7 +173,7 @@ function createGlobe(radius) {
         radius: radius,
         draw: function() {
             //stroke(255);
-            orbitControl(2,2,0);
+            //orbitControl(2,2,0);
             noStroke();
             //fill(0);
             texture(earthimg);
@@ -145,6 +222,7 @@ function keyPressed() {
     }
 }
 
+
 //got rid of rotation functions here
 
 
@@ -154,7 +232,7 @@ function keyPressed() {
 // https://editor.p5js.org/kimberlypatton1774/sketches/7nUfLy17T
 // try to figure this out for materials and trails
 // shaders
-// something for the background.. stars ?
+
 
 
 
@@ -170,11 +248,7 @@ function drawArticles() {
             
         }
         
-        
-        
     })
-    
-    
 }
 
 
@@ -191,6 +265,9 @@ function createArticle(article, i) {
             //articles are on the earth
             if (time-i <= mintime) {
                 article.opacity += 25;
+                if (article.opacity==255) {
+                    currentYear = article.date.getFullYear();
+                }
                 t = 0;
             }
             //articles are orbiting
@@ -208,7 +285,7 @@ function createArticle(article, i) {
             }
             
             let color = chooseColor(article.group);
-            
+            let rad = chooseRad(color);
             push();
             
             rotateY(radians(article.longitude + orbitAngle) + PI); 
@@ -219,14 +296,19 @@ function createArticle(article, i) {
 
             if (article.orbitLife >= 1000) {
                 if (article.opacity > 0) {
-                    article.opacity-=0.5;
+                    article.opacity-=5;
+                    if (article.opacity == 0) {
+                        disappearingYear = article.date.getFullYear();
+                        
+                    }
                 } 
             }
-            //console.log(article.opacity);
+            
             fill(hexToRGB(color)[0],hexToRGB(color)[1],hexToRGB(color)[2], article.opacity);
 
+           
+            sphere(rad);
             
-            sphere(2);
             pop();
             
         }
@@ -239,7 +321,7 @@ function drawStars(articles) {
         
         push();
             
-        rotateY(radians(cv.longitude) + PI); // <-- update these lines for the orbiting animation?
+        rotateY(radians(cv.longitude) + PI);
         rotateX(radians(cv.latitude));
         translate(cv.rx + (i%10)-5,cv.ry + (i%50)-7,2000+cv.rz);
         fill(255);
@@ -247,6 +329,26 @@ function drawStars(articles) {
         pop();
         
     })
+}
+
+function drawYears() {
+    x = windowWidth/2;
+    y = 0 - (windowHeight/2) +　30;
+    inc = Math.abs(y)/4
+    for (let year = 2015; year <= 2023; year++) {
+        if (year<= currentYear && year >= disappearingYear) {
+            fill(255,255,255,255);
+        }
+        else {
+            fill(255,255,255,100);
+        }
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        text(year,x,y);
+        y+= inc;
+    }
+    
+
 }
 
 //this is not working
@@ -299,6 +401,8 @@ function chooseColor(grp) {
             return '#9d94ff'
         default:
             return '#c780e8'
+            
+
     }
 }
 
@@ -319,4 +423,11 @@ function hexToRGB(color) {
     let b = parseInt(color.substring(4, 6), 16);
 
     return [r,g,b];
+}
+
+function chooseRad(color) {
+    var ellipse = ellipses.find(function(d) {
+        return d.color == color
+    })
+    return ellipse.radius
 }
