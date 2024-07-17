@@ -5,13 +5,38 @@
         <title>space visualization</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
         <script src="https://d3js.org/d3.v7.min.js"></script>
+        <!--script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/101/three.min.js"></script>-->
         <script src="sketch.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+</head>
         <link rel="stylesheet" href="styles.css">
+        
     </head>
     <body>
+        <!--canvas class="three"></canvas-->
         <svg id="legendsvg">
-            <!-- Your SVG content goes here -->
             <rect width="100%" height="100%" fill="none"/>
         </svg>
+        <div class="container" onclick="barsClicked(this)">
+            <div class="bar1"></div>
+            <div class="bar2"></div>
+            <div class="bar3"></div>
+            <div class="popup">
+                <p class="key">X: rotate X<br>Y: rotate Y<br>Z: rotate Z<br>R: reset<br> spacebar: pause</p><br>
+                <p class="paragraph">For this project, I have designed a creative data visualization centered around global space-related activities to foster deeper appreciation for space exploration.
+                    The moving spheres represent space-related articles, which emerge from the Earth at the location associated with the article. 
+                    The color is determined by its category, which is shown in the legend. You will be able to change the sizes of the categories using the circles in the legend. You can also rotate the earth with the mouse.
+                </p>
+            </div>
+        </div>
+        <div class="title">Visualizing space-related activities across the world<br>from 2015 to 2023</div>
+        
+       
+        <script>
+            function barsClicked(x) {
+                x.classList.toggle('change');
+                x.classList.toggle('active');
+            }
+        </script>
     </body>
 </html>
